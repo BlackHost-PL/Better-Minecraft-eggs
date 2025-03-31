@@ -1,0 +1,81 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": null
+    },
+    "exported_at": "2025-03-31T16:57:55+02:00",
+    "name": "Velocity",
+    "author": "hhakerr@blackhost.pl",
+    "description": "Velocity is a Minecraft server proxy with unparalleled server support, scalability, and flexibility.",
+    "features": [
+        "eula",
+        "java_version",
+        "pid_limit"
+    ],
+    "docker_images": {
+        "Java 21": "ghcr.io\/parkervcp\/yolks:java_21",
+        "Java 18": "ghcr.io\/pterodactyl\/yolks:java_18",
+        "Java 17": "ghcr.io\/parkervcp\/yolks:java_17",
+        "Java 16": "ghcr.io\/parkervcp\/yolks:java_16",
+        "Java 11": "ghcr.io\/parkervcp\/yolks:java_11",
+        "Java 8": "ghcr.io\/parkervcp\/yolks:java_8"
+    },
+    "file_denylist": [],
+    "startup": "java -Xms128M -Xmx{{SERVER_MEMORY}}M -XX:+UseG1GC -XX:G1HeapRegionSize=4M -XX:+UnlockExperimentalVMOptions -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:MaxInlineLevel=15 -jar {{SERVER_JARFILE}}",
+    "config": {
+        "files": "{\r\n    \"velocity.toml\": {\r\n        \"parser\": \"file\",\r\n        \"find\": {\r\n            \"bind = \": \"bind = \\\"0.0.0.0:{{server.build.default.port}}\\\"\"\r\n        }\r\n    }\r\n}",
+        "startup": "{\r\n    \"done\": \"Done (\"\r\n}",
+        "logs": "{}",
+        "stop": "end"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/ash\r\n# Velocity Proxy Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\nPROJECT=velocity\r\n\r\nif [[ -z ${VELOCITY_VERSION} ]] || [[ ${VELOCITY_VERSION} == \"latest\" ]]; then\r\n    VELOCITY_VERSION=\"latest\"\r\nfi\r\n\r\nif [[ -n \"${DOWNLOAD_LINK}\" ]]; then\r\n    echo -e \"Using supplied download url: ${DOWNLOAD_LINK}\"\r\n    DOWNLOAD_URL=$(eval echo $(echo ${DOWNLOAD_LINK} | sed -e 's\/{{\/${\/g' -e 's\/}}\/}\/g'))\r\nelse\r\n    API_URL=\"https:\/\/api.papermc.io\/v2\/projects\/velocity\"\r\n    LATEST_VERSION=$(curl -s \"${API_URL}\" | jq -r '.versions[-1]')\r\n\r\n    if [[ -z \"${VELOCITY_VERSION}\" ]] || [[ \"${VELOCITY_VERSION}\" == \"latest\" ]]; then\r\n        VELOCITY_VERSION=${LATEST_VERSION}\r\n    fi\r\n\r\n    LATEST_BUILD=$(curl -s \"${API_URL}\/versions\/${VELOCITY_VERSION}\" | jq -r '.builds[-1]')\r\n\r\n    if [[ -z \"${BUILD_NUMBER}\" ]] || [[ \"${BUILD_NUMBER}\" == \"latest\" ]]; then\r\n        BUILD_NUMBER=${LATEST_BUILD}\r\n    fi\r\n\r\n    JAR_NAME=\"velocity-${VELOCITY_VERSION}-${BUILD_NUMBER}.jar\"\r\n    DOWNLOAD_URL=\"https:\/\/api.papermc.io\/v2\/projects\/velocity\/versions\/${VELOCITY_VERSION}\/builds\/${BUILD_NUMBER}\/downloads\/${JAR_NAME}\"\r\nfi\r\n\r\ncd \/mnt\/server\r\n\r\necho -e \"Downloading Velocity Proxy: ${DOWNLOAD_URL}\"\r\n\r\nif [[ -f ${SERVER_JARFILE} ]]; then\r\n    rm -f ${SERVER_JARFILE}\r\nfi\r\n\r\ncurl -o ${SERVER_JARFILE} ${DOWNLOAD_URL}\r\n\r\nif [[ ! -f velocity.toml ]]; then\r\n    echo -e \"Downloading velocity.toml\"\r\n    curl -o velocity.toml https:\/\/raw.githubusercontent.com\/parkervcp\/eggs\/master\/game_eggs\/minecraft\/proxy\/java\/velocity\/velocity.toml\r\nfi\r\n\r\nif [[ ! -f forwarding.secret ]]; then\r\n    echo -e \"Creating forwarding.secret\"\r\n    touch forwarding.secret\r\n    date +%s | sha256sum | base64 | head -c 12 > forwarding.secret\r\nfi\r\n\r\necho -e \"Installation complete\"",
+            "container": "ghcr.io\/pterodactyl\/installers:alpine",
+            "entrypoint": "ash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Velocity Version",
+            "description": "The Velocity Proxy version to download.\r\n\r\nSet to 'latest ' the download the last stable build.\r\nSet to '1.1.x-SNAPSHOT' to get the latest dev build.",
+            "env_variable": "VELOCITY_VERSION",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Server Jar File",
+            "description": "Server Jarfile, by default this is set to 'velocity.jar'.\r\nSet it to otherwise if you wish to have a different jarfile name.",
+            "env_variable": "SERVER_JARFILE",
+            "default_value": "velocity.jar",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        },
+        {
+            "name": "Download Path",
+            "description": "A URL to use to download a server.jar rather than the ones in the install script. This is not user viewable.",
+            "env_variable": "DL_PATH",
+            "default_value": "",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "nullable|string",
+            "field_type": "text"
+        },
+        {
+            "name": "Build Number",
+            "description": "The build number for the velocity release.\r\n\r\nLeave at latest to always get the latest version. Invalid versions will default to latest.",
+            "env_variable": "BUILD_NUMBER",
+            "default_value": "latest",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|max:20",
+            "field_type": "text"
+        }
+    ]
+}
