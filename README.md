@@ -13,6 +13,8 @@ This repository contains optimized and enhanced Pterodactyl eggs for running var
 
 🔧 Removed requirement to delete `server.jar` after version change in startup settings.
 
+ℹ️ No need to reinstall the server anymore! The server will automatically update on startup (for supported engines).
+
 ## 📦 Installation  
 
 1. Download the appropriate `.json` file from the folder of your choice.  
